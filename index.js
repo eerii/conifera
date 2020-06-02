@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 app.use(express.json())
+app.use(express.static('build'))
 
 const cors = require('cors')
 app.use(cors())
@@ -32,9 +33,9 @@ let contacts = [
     }
 ]
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
     res.send('<h1>Contact Server</h1>')
-})
+})*/
 
 app.get('/info', (req, res) => {
     res.send(`<div><p>The phonebook contains ${contacts.length} contacts</p> <p>${new Date()}</p><div/>`)

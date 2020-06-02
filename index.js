@@ -13,7 +13,9 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :r
 const Contact = require('./models/contact')
 
 app.get('/info', (req, res) => {
-    res.send(`<div><p>The phonebook contains ${contacts.length} contacts</p> <p>${new Date()}</p><div/>`)
+    Contact.count({}, function(err, count){
+        res.send(`<div><p>The phonebook contains ${count} contacts</p> <p>${new Date()}</p><div/>`)
+    });
 })
 
 app.get('/api/persons', (req, res) => {
@@ -22,30 +24,28 @@ app.get('/api/persons', (req, res) => {
     })
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    Contact.findById(req.params.id).then(contact => {
-        //TODO: NOT WORKING YET
-        res.json(contact)
-    }).catch(res.status(404).end())
+app.get('/api/persons/:id', (req, res, next) => {
+    Contact.findById(req.params.id)
+        .then(contact => {
+            contact ? res.json(contact) : res.status(404).end()
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    //TODO: NOT WORKING YET
-    const id = Number(req.params.id)
-    contacts = contacts.filter(contacts => contacts.id !== id)
-    res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+    Contact.findByIdAndRemove(req.params.id)
+        .then(result => {
+            res.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
     if (!body.name) {
         return res.status(400).json({ error: 'The name of the contact is missing' })
     }
-    /* Now we can have multiple entries with the same name
-    else if (contacts.find(contacts => contacts.name === body.name)) {
-        return res.status(400).json({ error: 'The name of the contact is already on the phonebook' })
-    }*/
 
     if (!body.number) {
         return res.status(400).json({ error: 'The number of the contact is missing' })
@@ -57,10 +57,46 @@ app.post('/api/persons', (req, res) => {
         date: new Date()
     })
 
-    newContact.save().then(result => {
-        console.log(`${newContact.name} was saved to your phonebook`)
-    })
+    newContact.save()
+        .then(contact => {
+            console.log(`${newContact.name} was saved to your phonebook`)
+            res.json(contact)
+        })
+        .catch(error => next(error))
 })
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+
+    const newContact ={
+        name: body.name,
+        number:  body.number,
+        date: new Date()
+    }
+
+    Contact.findByIdAndUpdate(req.params.id, newContact, { new: true })
+        .then(updatedContact => {
+            res.json(updatedContact)
+        })
+        .catch(error => next(error))
+})
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'Unknown endpoint' })
+}
+app.use(unknownEndpoint)
+
+const errorHandler = (error, req, res, next) => {
+    console.error(error.message)
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'The ID is not formatted propperly' })
+    }
+    else {
+        console.log(error)
+    }
+    next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

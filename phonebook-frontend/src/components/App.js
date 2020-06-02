@@ -43,7 +43,7 @@ const App = () => {
     //console.log("Render", contacts.length, "contacts")
 
     return (
-        <div>
+        <div id="page">
             <h1>Phonebook</h1>
 
             <Notification error={notification[0]} message={notification[1]}/>

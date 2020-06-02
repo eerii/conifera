@@ -28,8 +28,18 @@ app.get('/', (req, res) => {
     res.send('<h1>Contact Server</h1>')
 })
 
+app.get('/info', (req, res) => {
+    res.send(`<div><p>The phonebook contains ${contacts.length} contacts</p> <p>${new Date()}</p><div/>`)
+})
+
 app.get('/api/persons', (req, res) => {
     res.json(contacts)
+})
+
+app.get('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id)
+    const contact = contacts.find(contact => contact.id === id)
+    contact ? res.json(contact) : res.status(404).end()
 })
 
 const PORT = 3001

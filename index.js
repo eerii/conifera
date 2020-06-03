@@ -43,13 +43,13 @@ app.delete('/api/persons/:id', (req, res, next) => {
 app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
-    if (!body.name) {
+    /*if (!body.name) {
         return res.status(400).json({ error: 'The name of the contact is missing' })
     }
 
     if (!body.number) {
         return res.status(400).json({ error: 'The number of the contact is missing' })
-    }
+    }*/
 
     const newContact = new Contact({
         name: body.name,
@@ -90,6 +90,9 @@ const errorHandler = (error, req, res, next) => {
     console.error(error.message)
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'The ID is not formatted propperly' })
+    }
+    else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
     }
     else {
         console.log(error)

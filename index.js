@@ -19,9 +19,11 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-    Contact.find({}).then(contact => {
+    Contact.find({})
+        .then(contact => {
         res.json(contact)
-    })
+        })
+        .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -81,21 +83,22 @@ app.put('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error))
 })
 
-const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'Unknown endpoint' })
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'Unknown endpoint' })
 }
 app.use(unknownEndpoint)
 
 const errorHandler = (error, req, res, next) => {
-    console.error(error.message)
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'The ID is not formatted propperly' })
     }
     else if (error.name === 'ValidationError') {
-        return res.status(400).json({ error: error.message })
+        console.log(error.message)
+        return res.status(400).send({ error: error.message })
     }
     else {
-        console.log(error)
+        console.log(error.message)
+        return res.status(400).send({ error: error.message })
     }
     next(error)
 }

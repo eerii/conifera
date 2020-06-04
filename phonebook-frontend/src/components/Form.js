@@ -5,7 +5,7 @@ const Form = ({contacts, setContacts, setNotification, timeout, setTheTimeout}) 
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
 
-    const addNote = (event) => {
+    const addContact = (event) => {
         event.preventDefault()
         if ((contacts.map(contacts => contacts.name.toLowerCase())).includes(newName.toLowerCase())) {
             const key = Object.keys(contacts).find(key => contacts[key].name.toLowerCase() === newName.toLowerCase());
@@ -19,9 +19,14 @@ const Form = ({contacts, setContacts, setNotification, timeout, setTheTimeout}) 
                             if (timeout) {clearTimeout(timeout)}
                         })
                         .catch(error => {
-                            setNotification([true, `The entry for ${newName} has been removed from the server`])
+                            if (error.name === 'TypeError') {
+                                setNotification([true, `The entry for ${newName} has been removed from the server`])
+                                setContacts(contacts.filter(n => n.id !== changedContact.id))
+                            }
+                            else {
+                                setNotification([true, error.message])
+                            }
                             if (timeout) {clearTimeout(timeout)}
-                            setContacts(contacts.filter(n => n.id !== changedContact.id))
                         })
                 }
             }
@@ -36,12 +41,18 @@ const Form = ({contacts, setContacts, setNotification, timeout, setTheTimeout}) 
                 number: newNumber
             }
 
-            contactService.newContact(contactObj).then(contact => {
-                setContacts(contacts.concat(contact))
-                setNotification([false, `${newName} has been added to your phonebook!`])
-                if (timeout) {clearTimeout(timeout)}
-            })
+            contactService.newContact(contactObj)
+                .then(contact => {
+                    setContacts(contacts.concat(contact))
+                    setNotification([false, `${newName} has been added to your phonebook!`])
+                    if (timeout) {clearTimeout(timeout)}
+                })
+                .catch(error => {
+                    setNotification([true, error.message])
+                    if (timeout) {clearTimeout(timeout)}
+                })
         }
+
         setNewName('')
         setNewNumber('')
 
@@ -59,7 +70,7 @@ const Form = ({contacts, setContacts, setNotification, timeout, setTheTimeout}) 
     }
 
     return (
-        <form onSubmit={addNote}>
+        <form onSubmit={event => addContact(event)}>
             <div>
                 Name: <input value={newName} onChange={onNameChange}/>
             </div>

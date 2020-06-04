@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buildFrontend": "rm -rf build && cd phonebook-frontend && npm run build --prod && mv -f build ../ && cd .."
   },
   "author": "José Pazos Pérez",
   "license": "MIT",
